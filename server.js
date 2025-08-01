@@ -1,5 +1,6 @@
 const express = require('express')
 require('dotenv').config()
+const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt')
 const path = require('path')
 const {Pool} = require('pg')
@@ -18,32 +19,39 @@ const pool = new Pool({
 app.get('/register', (req, res)=>{
     res.sendFile(path.join(__dirname, 'public/registerForm.html'))
 })
+app.post('/registerSubmit', async (req, res)=>{
+   const {name, password} = req.body
+   const hash = await bcrypt.hash(password, 12)
+   const result = await pool.query("INSERT INTO users (name, password_hash) VALUES ($1, $2) RETURNING *", [name, hash])
+   const user = result.rows[0]
+   console.log(user)
+   res.json(user)
+})
 app.get('/login', (req, res)=>{
     res.sendFile(path.join(__dirname, 'public/loginForm.html'))
 })
 app.post('/loginSubmit', async (req, res)=>{
-    try {
-        const {name, password} = req.body
-        console.log(`loginSubmit req.body: ${name}, ${password}`)
-        const user = await pool.query("SELECT * FROM users WHERE name=$1", [name])
-        console.log(`loginSubmit pool.query: ${user.rows[0].password_hash}`)
-        const match = await bcrypt.compare(password, user.rows[0].password_hash)
-        if(!match) throw new Error("Invalid credentials")
-        res.send('You are logged in')
-    } catch (error) {
-        console.log(error)
-    }
-})
-app.post('/registerSubmit', async (req, res)=>{
-    try {
-        const {name, password} = req.body
-        const hash = await bcrypt.hash(password, 12)
-        const user = await pool.query("INSERT INTO users (name, password_hash) VALUES ($1, $2) RETURNING *", [name, hash])
-        res.status(201).json({id: user.rows[0].id, name: user.rows[0].name})
-    } catch (error) {
-        console.log(error)
-    }
+  try {
+     const {name, password} = req.body
+     const {rows} = await pool.query("SELECT id, password_hash FROM users WHERE name=$1", [name])
+     const {id, password_hash} = rows[0]
+     if(!password_hash) throw new Error('user not found')
+     const match = await bcrypt.compare(password, password_hash)
+    if(!match) throw new Error('Wrong password')
+    const token = jwt.sign({id}, process.env.JWT_SECRET)
+
+  } catch (error) {
+    console.log(error)
+
+  }
 })
 
+app.get('/profile', requireAuth, async (req, res)=>{
 
-app.listen(process.env.PORT)
+})
+
+function requireAuth  (req, res, next)  {
+  
+};
+
+app.listen(process.env.PORT || 3000)
