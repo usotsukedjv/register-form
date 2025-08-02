@@ -1,0 +1,11 @@
+const express = require('express')
+const path = require('path')
+const userController = require('../controllers/userController.js')
+const router = express.Router()
+router.use(express.static(path.join(__dirname, '../../public'))) 
+router.get('/register', userController.register)
+router.post('/registerSubmit', userController.registerSubmit)
+router.get('/login', userController.login)
+router.post('/loginSubmit', userController.loginSubmit)
+router.get('/profile', userController.requireAuth ,userController.getProfile)
+module.exports = router

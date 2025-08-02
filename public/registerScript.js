@@ -15,7 +15,7 @@ if(!password){
 }
 const data = new URLSearchParams(formData)
 console.log(`Here is URLSearchParams data: ${data}`)
-fetch('/registerSubmit', {
+fetch('/users/registerSubmit', {
     method: 'post',
     headers: {'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'},
     body: data.toString()

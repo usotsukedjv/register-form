@@ -7,7 +7,7 @@ const password = formData.get('password')
 console.log(`loginScript formData: ${name}, ${password}`)
 const data = new URLSearchParams(formData)
 console.log(`loginScript URLSearchParams: ${data}`)
-fetch('/loginSubmit', {
+fetch('/users/loginSubmit', {
     method: 'post',
     headers: {'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'},
     body: data.toString()
